@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import scrapy
 import json
+
+import time
+
 from douban.items import ZiroomItem
 
 
@@ -58,8 +61,8 @@ class ZiroomSpiderSpider(scrapy.Spider):
     #             print(ziroom)
     def parseRoomInfo(self, response):
         ziroom = response.meta['ziroom']
-        #房间连接详情
-        ziroom['room_link']=response.url
+        # 房间连接详情
+        ziroom['room_link'] = response.url
         # 房屋编号
         ziroom['room_number'] = response.xpath("//div[@class='aboutRoom gray-6']/h3/text()").extract()[1].strip()
         # 房屋描述
@@ -73,4 +76,5 @@ class ZiroomSpiderSpider(scrapy.Spider):
         # 楼层
         ziroom['room_floor'] = "".join(
             response.xpath("//ul[@class='detail_room']/li[4]/text()").extract_first().split())
+        ziroom['room_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         print(ziroom)

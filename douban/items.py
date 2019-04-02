@@ -50,4 +50,6 @@ class ZiroomItem(scrapy.Item):
     house_type = scrapy.Field()
     # 房间楼层
     room_floor = scrapy.Field()
+    # 时间
+    room_time = scrapy.Field()
     pass
