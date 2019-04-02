@@ -30,8 +30,8 @@ class DoubanItem(scrapy.Item):
 class ZiroomItem(scrapy.Item):
     # 自如类型（合租、整租...）
     ziroom_type = scrapy.Field()
-    # 地铁线路
-    subway_number = scrapy.Field()
+    # 地铁站点
+    subway_station = scrapy.Field()
     # 房间title
     room_title = scrapy.Field()
     # 距离地铁站距离
