@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import re
+
 import scrapy
 import json
 
@@ -37,6 +39,11 @@ class ZiroomSpiderSpider(scrapy.Spider):
             ziroom['subway_distance'] = room_item.xpath(
                 "./div[@class='txt']/div[@class='detail']/p[2]/span/text()").extract_first()
             room_info_rul = "http:" + room_item.xpath("./div/a/@href").extract_first()
+            # 列表页中的价格信息
+            # todo
+            print(str(response.text))
+            nihao = re.search(".*ROOM_PRICE.*", str(response.text), flags=0)
+            print(nihao)
             # 交给处理房间详情的方法
             yield scrapy.Request(room_info_rul, callback=self.parseRoomInfo,
                                  meta={"ziroom": ziroom})
