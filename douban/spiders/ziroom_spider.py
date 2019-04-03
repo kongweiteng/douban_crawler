@@ -37,6 +37,7 @@ class ZiroomSpiderSpider(scrapy.Spider):
         # li = ff.find_elements_by_xpath('//*[@id="houseList"]/li[1]/div[3]/p[1]/span[2]')
         subway_station_item_name = response.meta['subway_station_item_name']
         ziroom_list = response.xpath("//div[@class='t_newlistbox']//ul[@id='houseList']//li[@class='clearfix']")
+        count = 0
         for room_item in ziroom_list:
             ziroom = ZiroomItem()
             ziroom['ziroom_type'] = '友家合租'
@@ -48,12 +49,14 @@ class ZiroomSpiderSpider(scrapy.Spider):
             # 处理房间的价格
             # print(response.text)
             img_url = self.get_img_url(response.text)[0]
-            offerset = self.get_img_url(response.text)[1]
+            offerset = self.get_img_url(response.text)[1][count]
             img_number = self.get_num_list(img_url)
             # 根据图片的数据和offerset 计算价格
-
-
-            # print(photo_url)
+            price = ''
+            for offerset_item in offerset:
+                price = price + str(img_number[offerset_item])
+            count += 1
+            ziroom['room_price'] = int(price)
             # 交给处理房间详情的方法
             yield scrapy.Request(room_info_rul, callback=self.parseRoomInfo,
                                  meta={"ziroom": ziroom})
@@ -109,10 +112,10 @@ class ZiroomSpiderSpider(scrapy.Spider):
         imageUrl = 'http:' + priceImage['image']
         imageOffset = priceImage['offset']
         imageFile = html.get_picture(imageUrl)
-        print(imageFile)
+        # print(imageFile)
         numbers = getNumbers.getNum(imageFile)
-        print(imageOffset)
-        print(numbers)
+        # print(imageOffset)
+        # print(numbers)
         return numbers, imageOffset
 
     def get_picture(image_url, imageUrl):
