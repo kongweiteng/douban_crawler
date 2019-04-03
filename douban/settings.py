@@ -22,16 +22,16 @@ ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 # 开启线程数量，默认16
-CONCURRENT_REQUESTS = 10
+CONCURRENT_REQUESTS = 20
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 0
 # The download delay setting will honor only one of:
-# CONCURRENT_REQUESTS_PER_DOMAIN = 16
-# CONCURRENT_REQUESTS_PER_IP = 16
-
+CONCURRENT_REQUESTS_PER_DOMAIN = 20
+CONCURRENT_REQUESTS_PER_IP = 20
+LOG_LEVEL='INFO'
 # Disable cookies (enabled by default)
 # COOKIES_ENABLED = False
 
@@ -56,6 +56,7 @@ DOWNLOAD_DELAY = 3
 DOWNLOADER_MIDDLEWARES = {
     # 'douban.middlewares.DoubanDownloaderMiddleware': 543,
     # 'douban.middlewares.my_proxy': 543,
+    'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
     'douban.middlewares.my_user_agent': 543,
 }
 

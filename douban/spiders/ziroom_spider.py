@@ -64,6 +64,8 @@ class ZiroomSpiderSpider(scrapy.Spider):
                 yield scrapy.Request(room_info_rul, callback=self.parseRoomInfo,
                                      meta={"ziroom": ziroom})
             next_link = response.xpath('//*[@id="page"]/a[5]/@href').extract()
+            page = response.xpath("//a[@class='active']/text()").extract_first()
+            print({"lin":subway_line,"sub":subway_station_item_name,"page":page,})
             if next_link:
                 next_link = next_link[0]
                 yield scrapy.Request("http:" + next_link, callback=self.parseRoomList)
