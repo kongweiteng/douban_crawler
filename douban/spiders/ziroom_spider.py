@@ -20,15 +20,22 @@ class ZiroomSpiderSpider(scrapy.Spider):
     # 入口url，
     start_urls = ['http://www.ziroom.com/z/nl/z2-o2.html']
 
-    # 处理地铁站的循环
+    # 处理地铁线路以及地铁站点的循环
     def parse(self, response):
-        subway_station_list = response.xpath("//div[@class='selection_con']//dl[3]//dd/ul/li/div/span[@class='tag']/a")
-        for subway_station_item in subway_station_list:
-            subway_station_item_name = subway_station_item.xpath("./text()").extract_first()
-            if subway_station_item_name != '全部':
-                subway_station_url = subway_station_item.xpath("./@href").extract_first()
-                yield scrapy.Request("http:" + subway_station_url, callback=self.parseRoomList,
-                                     meta={"subway_station_item_name": subway_station_item_name})
+        subway_line_list = response.xpath('//*[@id="selection"]/div/div/dl[3]/dd/ul/li/span')
+        for subway_line_item in subway_line_list:
+            subway_station_list = subway_line_item.xpath('./following-sibling::div[1]/span/a')
+            subway_line = subway_line_item.xpath('./a/text()').extract_first()
+
+            # print(list)
+            # subway_station_list = response.xpath("//div[@class='selection_con']//dl[3]//dd/ul/li/div/span[@class='tag']/a")
+            for subway_station_item in subway_station_list:
+                subway_station_item_name = subway_station_item.xpath("./text()").extract_first()
+                if subway_station_item_name != '全部':
+                    subway_station_url = subway_station_item.xpath("./@href").extract_first()
+                    yield scrapy.Request("http:" + subway_station_url, callback=self.parseRoomList,
+                                         meta={"subway_station_item_name": subway_station_item_name,
+                                               "subway_line": subway_line})
 
     # 处理每个地铁站翻页后的数据
     def parseRoomList(self, response):
@@ -36,12 +43,14 @@ class ZiroomSpiderSpider(scrapy.Spider):
         # ff.get(response.url)
         # li = ff.find_elements_by_xpath('//*[@id="houseList"]/li[1]/div[3]/p[1]/span[2]')
         subway_station_item_name = response.meta['subway_station_item_name']
+        subway_line = response.meta['subway_line']
         ziroom_list = response.xpath("//div[@class='t_newlistbox']//ul[@id='houseList']//li[@class='clearfix']")
         count = 0
         for room_item in ziroom_list:
             ziroom = ZiroomItem()
             ziroom['ziroom_type'] = '友家合租'
             ziroom['subway_station'] = subway_station_item_name
+            ziroom['subway_line'] = subway_line
             ziroom['room_title'] = room_item.xpath("./div[@class='txt']/h3/a/text()").extract_first()
             ziroom['subway_distance'] = room_item.xpath(
                 "./div[@class='txt']/div[@class='detail']/p[2]/span/text()").extract_first()
@@ -102,8 +111,8 @@ class ZiroomSpiderSpider(scrapy.Spider):
         ziroom['room_floor'] = "".join(
             response.xpath("//ul[@class='detail_room']/li[4]/text()").extract_first().split())
         ziroom['room_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        # print(ziroom)
-        yield ziroom
+        print(ziroom)
+        # yield ziroom
 
     def get_img_url(self, str):
         priceImage = re.compile('var ROOM_PRICE = (.*?);').search(str).group(1)
