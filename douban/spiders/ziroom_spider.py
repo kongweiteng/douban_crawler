@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import re
-
+import requests as req
+from PIL import Image
+import numpy as np
+from io import BytesIO
 import re
 import scrapy
 import time
@@ -44,7 +47,11 @@ class ZiroomSpiderSpider(scrapy.Spider):
             room_info_rul = "http:" + room_item.xpath("./div/a/@href").extract_first()
             # 处理房间的价格
             # print(response.text)
-            self.get_price(response.text)
+            img_url = self.get_img_url(response.text)[0]
+            offerset = self.get_img_url(response.text)[1]
+            img_number = self.get_num_list(img_url)
+            # 根据图片的数据和offerset 计算价格
+
 
             # print(photo_url)
             # 交给处理房间详情的方法
@@ -89,6 +96,13 @@ class ZiroomSpiderSpider(scrapy.Spider):
         ziroom['room_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         print(ziroom)
 
+    def get_img_url(self, str):
+        priceImage = re.compile('var ROOM_PRICE = (.*?);').search(str).group(1)
+        priceImage = eval(priceImage)
+        imageUrl = 'http:' + priceImage['image']
+        imageOffset = priceImage['offset']
+        return imageUrl, imageOffset
+
     def get_price(html, str):
         priceImage = re.compile('var ROOM_PRICE = (.*?);').search(str).group(1)
         priceImage = eval(priceImage)
@@ -106,3 +120,62 @@ class ZiroomSpiderSpider(scrapy.Spider):
         picture_name = 'ziroom.png'
         urlretrieve(url=imageUrl, filename=picture_name)
         return picture_name
+
+    def read_image_url(self, img_url):
+        response = req.get(img_url)
+        im = Image.open(BytesIO(response.content)).convert('RGB')
+        data = np.array(im)
+        return data
+
+    def read_image(self, imageName):
+        im = Image.open(imageName).convert('RGB')
+        data = np.array(im)
+        return data
+
+    def get_num(self, n):
+        l_num = []
+        m = 0
+        x = n
+        while True:
+            if m < 9:
+                x0, x1, = np.split(x, [30], axis=1)
+                # print(x0)
+                # plt.imshow(x0)
+                # plt.pause(0.001)
+                # print(x1)
+                # plt.imshow(x1)
+                # plt.pause(0.001)
+                l_num.append(x0)
+                x = x1
+                m += 1
+                continue
+            else:
+                l_num.append(x)
+                # plt.imshow(x)
+                # plt.pause(0.001)
+                break
+        return l_num
+
+    def get_0_9(self):
+        l_num = self.get_num(self.read_image('20190311181153410.png'))
+        x2, x4, x3, x6, x8, x5, x1, x9, x0, x7 = l_num
+        list_num = [x0, x1, x2, x3, x4, x5, x6, x7, x8, x9]
+        return list_num
+
+    def get_num_list(self, png):
+        l = []
+        list_num = self.get_0_9()
+        l_num_test = self.get_num(self.read_image_url(png))
+        for i in range(0, 10):
+            # plt.imshow(l_num_test[i])
+            # plt.pause(0.001)
+            for w in range(0, 10):
+                # print((i == w).all())
+                if (l_num_test[i] == list_num[w]).all():
+                    # plt.imshow(w)
+                    # plt.pause(0.001)
+                    l.append(w)
+                    # print(w)
+                    break
+        # print (l)
+        return l

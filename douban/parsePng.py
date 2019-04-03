@@ -12,10 +12,10 @@ import pytesseract
 def parsePng(img):
     # text = pytesseract.image_to_string(Image.open(img), lang='chi_sim')
     # print(text)
-    im = Image.open(img)
-    out = im.resize((45, 45), Image.ANTIALIAS)  # resize image with high-quality
-    out.save(img)
-    request_url = "https://aip.baidubce.com/rest/2.0/image-classify/v2/advanced_general"
+    # im = Image.open(img)
+    # out = im.resize((45, 45), Image.ANTIALIAS)  # resize image with high-quality
+    # out.save(img)
+    request_url = "https://aip.baidubce.com/rest/2.0/ocr/v1/general"
     # 二进制方式打开图片文件
     f = open(img, 'rb')
     img = base64.b64encode(f.read())
@@ -34,4 +34,4 @@ def parsePng(img):
 
 
 if __name__ == "__main__":
-    parsePng('ziroom.png')
+    parsePng('20190311181153410.png')
