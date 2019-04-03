@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 import re
-import requests as req
-from PIL import Image
-import numpy as np
-from io import BytesIO
-import re
-import scrapy
 import time
-from urllib.request import urlretrieve
-from douban import getNumbers
+import numpy as np
+import requests as req
+import scrapy
+from PIL import Image
+from io import BytesIO
 from douban.items import ZiroomItem
 
 
@@ -39,14 +36,9 @@ class ZiroomSpiderSpider(scrapy.Spider):
 
     # 处理每个地铁站翻页后的数据
     def parseRoomList(self, response):
-        # ff = webdriver.Firefox()
-        # ff.get(response.url)
-        # li = ff.find_elements_by_xpath('//*[@id="houseList"]/li[1]/div[3]/p[1]/span[2]')
         subway_station_item_name = response.meta['subway_station_item_name']
         subway_line = response.meta['subway_line']
         ziroom_list = response.xpath("//div[@class='t_newlistbox']//ul[@id='houseList']//li[@class='clearfix']")
-        # 处理房间的价格
-        # print(response.text)
         img_url = self.get_img_url(response.text)[0]
         offerset = self.get_img_url(response.text)[1]
         img_number = self.get_num_list(img_url)
@@ -69,47 +61,35 @@ class ZiroomSpiderSpider(scrapy.Spider):
             # 交给处理房间详情的方法
             yield scrapy.Request(room_info_rul, callback=self.parseRoomInfo,
                                  meta={"ziroom": ziroom})
-            # print(room_info_rul)
-            # print(dict(ziroom))
         next_link = response.xpath('//*[@id="page"]/a[5]/@href').extract()
         if next_link:
             next_link = next_link[0]
             yield scrapy.Request("http:" + next_link, callback=self.parseRoomList)
 
-    # ziroom = ZiroomItem()
-    # ziroom["subway_station"] = subway_station_item_name
-
-    # print(nih)
-
-    # ziroom_list = response.xpath("//div[@class='t_newlistbox']//ul[@id='houseList']//li")
-    # for room_item in ziroom_list:
-    #     ziroom = ZiroomItem()
-    #
-    #     ziroom['ziroom_type'] = '友家合租'
-    #     ziroom['subway_number'] = room_item.xpath("")
-    #     if subway_station_name_list != '全部':
-    #         for subway_station_name_item in subway_station_name_list:
-    #             ziroom = ZiroomItem()
-    #             ziroom['subway_station'] = subway_station_name_item
-    #             print(ziroom)
     def parseRoomInfo(self, response):
         ziroom = response.meta['ziroom']
         # 房间连接详情
         ziroom['room_link'] = response.url
         # 房屋编号
-        ziroom['room_number'] = response.xpath("//div[@class='aboutRoom gray-6']/h3/text()").extract()[1].strip()
+        room_number = response.xpath("//div[@class='aboutRoom gray-6']/h3/text()").extract()
+        if room_number:
+            ziroom['room_number'] = room_number[1].strip()
         # 房屋描述
-        ziroom['room_describe'] = "".join(
-            response.xpath("//div[@class='aboutRoom gray-6']/p/text()").extract_first().split())
+        room_describe = response.xpath("//div[@class='aboutRoom gray-6']/p/text()").extract_first()
+        if room_describe:
+            ziroom['room_describe'] = "".join(room_describe.split())
         # 房屋面积
-        ziroom['room_acreage'] = "".join(
-            response.xpath("//ul[@class='detail_room']/li[1]/text()").extract_first().split())
+        room_acreage = response.xpath("//ul[@class='detail_room']/li[1]/text()").extract_first()
+        if room_acreage:
+            ziroom['room_acreage'] = "".join(room_acreage.split())
         # 户型
-        ziroom['house_type'] = "".join(
-            response.xpath("//ul[@class='detail_room']/li[3]/text()").extract_first().split())
+        house_type = response.xpath("//ul[@class='detail_room']/li[3]/text()").extract_first()
+        if house_type:
+            ziroom['house_type'] = "".join(house_type.split())
         # 楼层
-        ziroom['room_floor'] = "".join(
-            response.xpath("//ul[@class='detail_room']/li[4]/text()").extract_first().split())
+        room_floor = response.xpath("//ul[@class='detail_room']/li[4]/text()").extract_first()
+        if room_floor:
+            ziroom['room_floor'] = "".join(room_floor.split())
         ziroom['room_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         # print(ziroom)
         yield ziroom
@@ -120,24 +100,6 @@ class ZiroomSpiderSpider(scrapy.Spider):
         imageUrl = 'http:' + priceImage['image']
         imageOffset = priceImage['offset']
         return imageUrl, imageOffset
-
-    def get_price(html, str):
-        priceImage = re.compile('var ROOM_PRICE = (.*?);').search(str).group(1)
-        priceImage = eval(priceImage)
-        imageUrl = 'http:' + priceImage['image']
-        imageOffset = priceImage['offset']
-        imageFile = html.get_picture(imageUrl)
-        # print(imageFile)
-        numbers = getNumbers.getNum(imageFile)
-        # print(imageOffset)
-        # print(numbers)
-        return numbers, imageOffset
-
-    def get_picture(image_url, imageUrl):
-        """ 获取图片 """
-        picture_name = 'ziroom.png'
-        urlretrieve(url=imageUrl, filename=picture_name)
-        return picture_name
 
     def read_image_url(self, img_url):
         response = req.get(img_url)
