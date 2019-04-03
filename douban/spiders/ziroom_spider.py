@@ -62,6 +62,10 @@ class ZiroomSpiderSpider(scrapy.Spider):
                                  meta={"ziroom": ziroom})
             # print(room_info_rul)
             # print(dict(ziroom))
+        next_link = response.xpath('//*[@id="page"]/a[5]/@href').extract()
+        if next_link:
+            next_link = next_link[0]
+            yield scrapy.Request("http:" + next_link, callback=self.parseRoomList)
 
     # ziroom = ZiroomItem()
     # ziroom["subway_station"] = subway_station_item_name
@@ -86,7 +90,8 @@ class ZiroomSpiderSpider(scrapy.Spider):
         # 房屋编号
         ziroom['room_number'] = response.xpath("//div[@class='aboutRoom gray-6']/h3/text()").extract()[1].strip()
         # 房屋描述
-        ziroom['room_describe'] = response.xpath("//div[@class='aboutRoom gray-6']/p/text()").extract_first()
+        ziroom['room_describe'] = "".join(
+            response.xpath("//div[@class='aboutRoom gray-6']/p/text()").extract_first().split())
         # 房屋面积
         ziroom['room_acreage'] = "".join(
             response.xpath("//ul[@class='detail_room']/li[1]/text()").extract_first().split())
@@ -97,7 +102,8 @@ class ZiroomSpiderSpider(scrapy.Spider):
         ziroom['room_floor'] = "".join(
             response.xpath("//ul[@class='detail_room']/li[4]/text()").extract_first().split())
         ziroom['room_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        print(ziroom)
+        # print(ziroom)
+        yield ziroom
 
     def get_img_url(self, str):
         priceImage = re.compile('var ROOM_PRICE = (.*?);').search(str).group(1)
