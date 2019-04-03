@@ -28,43 +28,45 @@ class ZiroomSpiderSpider(scrapy.Spider):
             # subway_station_list = response.xpath("//div[@class='selection_con']//dl[3]//dd/ul/li/div/span[@class='tag']/a")
             for subway_station_item in subway_station_list:
                 subway_station_item_name = subway_station_item.xpath("./text()").extract_first()
-                if subway_station_item_name != '全部':
-                    subway_station_url = subway_station_item.xpath("./@href").extract_first()
-                    yield scrapy.Request("http:" + subway_station_url, callback=self.parseRoomList,
-                                         meta={"subway_station_item_name": subway_station_item_name,
-                                               "subway_line": subway_line})
+                if subway_station_item_name:
+                    if subway_station_item_name != '全部':
+                        subway_station_url = subway_station_item.xpath("./@href").extract_first()
+                        yield scrapy.Request("http:" + subway_station_url, callback=self.parseRoomList,
+                                             meta={"subway_station_item_name": subway_station_item_name,
+                                                   "subway_line": subway_line})
 
     # 处理每个地铁站翻页后的数据
     def parseRoomList(self, response):
-        subway_station_item_name = response.meta['subway_station_item_name']
-        subway_line = response.meta['subway_line']
-        ziroom_list = response.xpath("//div[@class='t_newlistbox']//ul[@id='houseList']//li[@class='clearfix']")
-        img_url = self.get_img_url(response.text)[0]
-        offerset = self.get_img_url(response.text)[1]
-        img_number = self.get_num_list(img_url)
-        count = 0
-        for room_item in ziroom_list:
-            ziroom = ZiroomItem()
-            ziroom['ziroom_type'] = '友家合租'
-            ziroom['subway_station'] = subway_station_item_name
-            ziroom['subway_line'] = subway_line
-            ziroom['room_title'] = room_item.xpath("./div[@class='txt']/h3/a/text()").extract_first()
-            ziroom['subway_distance'] = room_item.xpath(
-                "./div[@class='txt']/div[@class='detail']/p[2]/span/text()").extract_first()
-            room_info_rul = "http:" + room_item.xpath("./div/a/@href").extract_first()
-            # 根据图片的数据和offerset 计算价格
-            price = ''
-            for offerset_item in offerset[count]:
-                price = price + str(img_number[offerset_item])
-            count += 1
-            ziroom['room_price'] = int(price)
-            # 交给处理房间详情的方法
-            yield scrapy.Request(room_info_rul, callback=self.parseRoomInfo,
-                                 meta={"ziroom": ziroom})
-        next_link = response.xpath('//*[@id="page"]/a[5]/@href').extract()
-        if next_link:
-            next_link = next_link[0]
-            yield scrapy.Request("http:" + next_link, callback=self.parseRoomList)
+        if response.status == 200:
+            subway_station_item_name = response.meta['subway_station_item_name']
+            subway_line = response.meta['subway_line']
+            ziroom_list = response.xpath("//div[@class='t_newlistbox']//ul[@id='houseList']//li[@class='clearfix']")
+            img_url = self.get_img_url(response.text)[0]
+            offerset = self.get_img_url(response.text)[1]
+            img_number = self.get_num_list(img_url)
+            count = 0
+            for room_item in ziroom_list:
+                ziroom = ZiroomItem()
+                ziroom['ziroom_type'] = '友家合租'
+                ziroom['subway_station'] = subway_station_item_name
+                ziroom['subway_line'] = subway_line
+                ziroom['room_title'] = room_item.xpath("./div[@class='txt']/h3/a/text()").extract_first()
+                ziroom['subway_distance'] = room_item.xpath(
+                    "./div[@class='txt']/div[@class='detail']/p[2]/span/text()").extract_first()
+                room_info_rul = "http:" + room_item.xpath("./div/a/@href").extract_first()
+                # 根据图片的数据和offerset 计算价格
+                price = ''
+                for offerset_item in offerset[count]:
+                    price = price + str(img_number[offerset_item])
+                count += 1
+                ziroom['room_price'] = int(price)
+                # 交给处理房间详情的方法
+                yield scrapy.Request(room_info_rul, callback=self.parseRoomInfo,
+                                     meta={"ziroom": ziroom})
+            next_link = response.xpath('//*[@id="page"]/a[5]/@href').extract()
+            if next_link:
+                next_link = next_link[0]
+                yield scrapy.Request("http:" + next_link, callback=self.parseRoomList)
 
     def parseRoomInfo(self, response):
         ziroom = response.meta['ziroom']
