@@ -45,6 +45,11 @@ class ZiroomSpiderSpider(scrapy.Spider):
         subway_station_item_name = response.meta['subway_station_item_name']
         subway_line = response.meta['subway_line']
         ziroom_list = response.xpath("//div[@class='t_newlistbox']//ul[@id='houseList']//li[@class='clearfix']")
+        # 处理房间的价格
+        # print(response.text)
+        img_url = self.get_img_url(response.text)[0]
+        offerset = self.get_img_url(response.text)[1]
+        img_number = self.get_num_list(img_url)
         count = 0
         for room_item in ziroom_list:
             ziroom = ZiroomItem()
@@ -55,14 +60,9 @@ class ZiroomSpiderSpider(scrapy.Spider):
             ziroom['subway_distance'] = room_item.xpath(
                 "./div[@class='txt']/div[@class='detail']/p[2]/span/text()").extract_first()
             room_info_rul = "http:" + room_item.xpath("./div/a/@href").extract_first()
-            # 处理房间的价格
-            # print(response.text)
-            img_url = self.get_img_url(response.text)[0]
-            offerset = self.get_img_url(response.text)[1][count]
-            img_number = self.get_num_list(img_url)
             # 根据图片的数据和offerset 计算价格
             price = ''
-            for offerset_item in offerset:
+            for offerset_item in offerset[count]:
                 price = price + str(img_number[offerset_item])
             count += 1
             ziroom['room_price'] = int(price)
@@ -111,8 +111,8 @@ class ZiroomSpiderSpider(scrapy.Spider):
         ziroom['room_floor'] = "".join(
             response.xpath("//ul[@class='detail_room']/li[4]/text()").extract_first().split())
         ziroom['room_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        print(ziroom)
-        # yield ziroom
+        # print(ziroom)
+        yield ziroom
 
     def get_img_url(self, str):
         priceImage = re.compile('var ROOM_PRICE = (.*?);').search(str).group(1)
