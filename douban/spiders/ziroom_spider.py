@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import re
 
+import re
 import scrapy
-import json
-
 import time
-
+from urllib.request import urlretrieve
+from douban import getNumbers
 from douban.items import ZiroomItem
 
 
@@ -29,6 +29,9 @@ class ZiroomSpiderSpider(scrapy.Spider):
 
     # 处理每个地铁站翻页后的数据
     def parseRoomList(self, response):
+        # ff = webdriver.Firefox()
+        # ff.get(response.url)
+        # li = ff.find_elements_by_xpath('//*[@id="houseList"]/li[1]/div[3]/p[1]/span[2]')
         subway_station_item_name = response.meta['subway_station_item_name']
         ziroom_list = response.xpath("//div[@class='t_newlistbox']//ul[@id='houseList']//li[@class='clearfix']")
         for room_item in ziroom_list:
@@ -39,11 +42,11 @@ class ZiroomSpiderSpider(scrapy.Spider):
             ziroom['subway_distance'] = room_item.xpath(
                 "./div[@class='txt']/div[@class='detail']/p[2]/span/text()").extract_first()
             room_info_rul = "http:" + room_item.xpath("./div/a/@href").extract_first()
-            # 列表页中的价格信息
-            # todo
-            print(str(response.text))
-            nihao = re.search(".*ROOM_PRICE.*", str(response.text), flags=0)
-            print(nihao)
+            # 处理房间的价格
+            # print(response.text)
+            self.get_price(response.text)
+
+            # print(photo_url)
             # 交给处理房间详情的方法
             yield scrapy.Request(room_info_rul, callback=self.parseRoomInfo,
                                  meta={"ziroom": ziroom})
@@ -85,3 +88,21 @@ class ZiroomSpiderSpider(scrapy.Spider):
             response.xpath("//ul[@class='detail_room']/li[4]/text()").extract_first().split())
         ziroom['room_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         print(ziroom)
+
+    def get_price(html, str):
+        priceImage = re.compile('var ROOM_PRICE = (.*?);').search(str).group(1)
+        priceImage = eval(priceImage)
+        imageUrl = 'http:' + priceImage['image']
+        imageOffset = priceImage['offset']
+        imageFile = html.get_picture(imageUrl)
+        print(imageFile)
+        numbers = getNumbers.getNum(imageFile)
+        print(imageOffset)
+        print(numbers)
+        return numbers, imageOffset
+
+    def get_picture(image_url, imageUrl):
+        """ 获取图片 """
+        picture_name = 'ziroom.png'
+        urlretrieve(url=imageUrl, filename=picture_name)
+        return picture_name
