@@ -16,6 +16,10 @@ class ZiroomSpiderSpider(scrapy.Spider):
     allowed_domains = ['ziroom.com']
     # 入口url，
     start_urls = ['http://www.ziroom.com/z/nl/z2-o2.html']
+    # 爬虫爬取页数控制初始值
+    page_count = 1
+    # 爬虫爬取页数 10为只爬取一页
+    page_end = 1
 
     # 处理地铁线路以及地铁站点的循环
     def parse(self, response):
@@ -37,12 +41,14 @@ class ZiroomSpiderSpider(scrapy.Spider):
 
     # 处理每个地铁站翻页后的数据
     def parseRoomList(self, response):
+        # print(response.request.headers['User-Agent'])
         if response.status == 200:
             subway_station_item_name = response.meta['subway_station_item_name']
             subway_line = response.meta['subway_line']
             ziroom_list = response.xpath("//div[@class='t_newlistbox']//ul[@id='houseList']//li[@class='clearfix']")
-            img_url = self.get_img_url(response.text)[0]
-            offerset = self.get_img_url(response.text)[1]
+            img_info = self.get_img_url(response.text)
+            img_url = img_info[0]
+            offerset = img_info[1]
             img_number = self.get_num_list(img_url)
             count = 0
             for room_item in ziroom_list:
@@ -60,15 +66,22 @@ class ZiroomSpiderSpider(scrapy.Spider):
                     price = price + str(img_number[offerset_item])
                 count += 1
                 ziroom['room_price'] = int(price)
+                page = response.xpath("//a[@class='active']/text()").extract_first()
+                print({"lin": subway_line, "sub": subway_station_item_name, "page": page, })
                 # 交给处理房间详情的方法
                 yield scrapy.Request(room_info_rul, callback=self.parseRoomInfo,
                                      meta={"ziroom": ziroom})
-            next_link = response.xpath('//*[@id="page"]/a[5]/@href').extract()
-            page = response.xpath("//a[@class='active']/text()").extract_first()
-            print({"lin":subway_line,"sub":subway_station_item_name,"page":page,})
-            if next_link:
-                next_link = next_link[0]
-                yield scrapy.Request("http:" + next_link, callback=self.parseRoomList)
+            next_link = response.xpath('//*[@id="page"]/a[@class="next"]/@href').extract()
+            if next_link != 'javascript:;':
+                if next_link:
+                    next_link = next_link[0]
+                    if next_link is not None:
+                        yield scrapy.Request("http:" + next_link, callback=self.parseRoomList,
+                                             meta={"subway_station_item_name": subway_station_item_name,
+                                                   "subway_line": subway_line})
+                else:
+                    # 爬虫结束
+                    return None
 
     def parseRoomInfo(self, response):
         ziroom = response.meta['ziroom']
@@ -101,8 +114,11 @@ class ZiroomSpiderSpider(scrapy.Spider):
     def get_img_url(self, str):
         priceImage = re.compile('var ROOM_PRICE = (.*?);').search(str).group(1)
         priceImage = eval(priceImage)
+        imageOffset = ''
         imageUrl = 'http:' + priceImage['image']
-        imageOffset = priceImage['offset']
+
+        if "offset" in priceImage:
+            imageOffset = priceImage['offset']
         return imageUrl, imageOffset
 
     def read_image_url(self, img_url):
