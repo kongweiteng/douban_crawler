@@ -66,8 +66,8 @@ class ZiroomSpiderSpider(scrapy.Spider):
                     price = price + str(img_number[offerset_item])
                 count += 1
                 ziroom['room_price'] = int(price)
-                page = response.xpath("//a[@class='active']/text()").extract_first()
-                print({"lin": subway_line, "sub": subway_station_item_name, "page": page, })
+                # page = response.xpath("//a[@class='active']/text()").extract_first()
+                # print({"lin": subway_line, "sub": subway_station_item_name, "page": page, })
                 # 交给处理房间详情的方法
                 yield scrapy.Request(room_info_rul, callback=self.parseRoomInfo,
                                      meta={"ziroom": ziroom})

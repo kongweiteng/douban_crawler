@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 
 # Scrapy settings for douban project
 #
@@ -22,16 +23,18 @@ ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 # 开启线程数量，默认16
-CONCURRENT_REQUESTS = 16
+CONCURRENT_REQUESTS = 100
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
 DOWNLOAD_DELAY = 0
 # The download delay setting will honor only one of:
-CONCURRENT_REQUESTS_PER_DOMAIN = 16
-CONCURRENT_REQUESTS_PER_IP = 16
-LOG_LEVEL='INFO'
+CONCURRENT_REQUESTS_PER_DOMAIN = 100
+CONCURRENT_REQUESTS_PER_IP = 100
+LOG_LEVEL = 'INFO'
+startDate = datetime.datetime.now().strftime('%Y%m%d')
+LOG_FILE = f"mySpiderlog{startDate}.txt"
 # Disable cookies (enabled by default)
 # COOKIES_ENABLED = False
 
@@ -58,6 +61,7 @@ DOWNLOADER_MIDDLEWARES = {
     # 'douban.middlewares.my_proxy': 543,
     'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
     'douban.middlewares.my_user_agent': 543,
+    'douban.exception.ProcessAllExceptionMiddleware.ProcessAllExceptionMiddleware': 120,
 }
 
 # Enable or disable extensions
@@ -69,6 +73,7 @@ DOWNLOADER_MIDDLEWARES = {
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
+    'douban.pipelines.EsPipline': 3,
     'douban.pipelines.DoubanPipeline': 300,
 }
 
