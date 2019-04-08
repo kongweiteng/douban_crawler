@@ -34,7 +34,7 @@ CONCURRENT_REQUESTS_PER_DOMAIN = 100
 CONCURRENT_REQUESTS_PER_IP = 100
 LOG_LEVEL = 'INFO'
 startDate = datetime.datetime.now().strftime('%Y%m%d')
-LOG_FILE = f"mySpiderlog{startDate}.txt"
+#LOG_FILE = f"./log/mySpiderlog{startDate}.txt"
 # Disable cookies (enabled by default)
 # COOKIES_ENABLED = False
 
