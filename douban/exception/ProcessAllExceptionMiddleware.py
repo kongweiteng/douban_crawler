@@ -17,7 +17,7 @@ class ProcessAllExceptionMiddleware(object):
         # 捕获状态码为40x/50x的response
         if str(response.status).startswith('4') or str(response.status).startswith('5'):
             # 随意封装，直接返回response，spider代码中根据url==''来处理response
-            response = HtmlResponse(url='')
+            #response = HtmlResponse(url='')
             return response
         # 其他状态码不处理
         return response

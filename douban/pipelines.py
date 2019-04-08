@@ -6,6 +6,7 @@
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
 import pymongo
+from .es_save import save
 from openpyxl import Workbook
 from douban.settings import mongo_host, mongo_port, mongo_db_name, mongo_db_douban_table, mongo_user, mongo_password, \
     mongo_db_ziroom_table
@@ -104,14 +105,17 @@ class DoubanPipeline(object):
             line = [ziroom_type, subway_line, subway_station, room_title, subway_distance, room_number, room_describe,
                     room_price, room_link, room_acreage, house_type, room_floor, room_time]  # 把数据中每一项整理出来
             # if line:
-                # self.ws.append(line)  # 将数据以行的形式添加到xlsx中
-                # self.wb.save('E:/source/python/douban/excel/ziroom.xlsx')  # 保存xlsx文件
+            # self.ws.append(line)  # 将数据以行的形式添加到xlsx中
+            # self.wb.save('E:/source/python/douban/excel/ziroom.xlsx')  # 保存xlsx文件
         return item
 
 
 # 将爬虫爬取的数据存储搜索服务器中
 class EsPipline(object):
+    def __init__(self):
+        self.index = 'ziroom'
+        self.doc_type = 'ziroom'
 
     def process_item(self, item, spider):
-        item.save_es()
+        save(self.index, self.doc_type, item)
         return item

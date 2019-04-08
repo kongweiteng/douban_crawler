@@ -74,7 +74,7 @@ DOWNLOADER_MIDDLEWARES = {
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     'douban.pipelines.EsPipline': 3,
-    'douban.pipelines.DoubanPipeline': 300,
+    #'douban.pipelines.DoubanPipeline': 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
