@@ -117,5 +117,5 @@ class EsPipline(object):
         self.doc_type = 'ziroom'
 
     def process_item(self, item, spider):
-        save(self.index, self.doc_type, item)
+        save(self.index, item['ziroom_type'], item)
         return item

@@ -53,7 +53,7 @@ class ZiroomSpiderSpider(scrapy.Spider):
             count = 0
             for room_item in ziroom_list:
                 ziroom = ZiroomItem()
-                ziroom['ziroom_type'] = '友家合租'
+                ziroom['ziroom_type'] = 'sharing'
                 ziroom['subway_station'] = subway_station_item_name
                 ziroom['subway_line'] = subway_line
                 ziroom['room_title'] = room_item.xpath("./div[@class='txt']/h3/a/text()").extract_first()
