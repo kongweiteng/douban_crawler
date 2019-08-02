@@ -108,7 +108,7 @@ class ZiroomSpiderSpider(scrapy.Spider):
         if room_floor:
             ziroom['room_floor'] = "".join(room_floor.split())
         ziroom['room_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        # print(ziroom)
+        print(ziroom)
         yield ziroom
 
     def get_img_url(self, str):
