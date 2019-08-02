@@ -1,6 +1,6 @@
 致力于爬虫的使用，目前只能用于北京自如房子的爬取，可以存到es也可以直接导入到excel
 
-
+启动 main.py
 
 pip install -r requirements.txt
 
